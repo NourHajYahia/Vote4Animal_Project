@@ -1,0 +1,46 @@
+version: '3'
+services:
+  mongo:
+    image: mongo:4.4
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - 27017:27017
+
+  redis:
+    image: redis
+
+
+  vote:
+    image: voting-app
+    ports:
+      - 5000:5000
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    
+  worker:
+    image: worker-app
+    environment:
+      - REDIS_HOST=redis
+      - MONGO_HOST=mongo
+
+  backend:
+    image: backend-app
+    ports:
+      - 4000:4000
+    environment:
+      - DB_URL=mongodb://mongo:27017/vote
+      - FRONT_URL=http://result:3000
+
+
+  result:
+    image: result-app
+    ports:
+      - 3000:3000
+
+
+volumes:
+  mongo-data:
+
